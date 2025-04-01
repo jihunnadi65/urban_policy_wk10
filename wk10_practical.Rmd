@@ -19,14 +19,16 @@ library(here)
 library(tidyverse)
 # load the 'stargazer' package to create well-formatted tables
 library(stargazer)
+# load the 'ggrepel' library to address label overlap
+library(ggrepel)
 ```
 
 2. Load Datasets
 
 ```{r}
-# load in Unemployment_Europe.csv
+# read in Unemployment_Europe.csv
 unemployment <- read_csv(here("Unemployment_Europe.csv"))
-# load in Ownership_Europe.csv
+# read in Ownership_Europe.csv
 ownership <- read_csv(here("Ownership_Europe.csv"))
 ```
 
@@ -37,31 +39,55 @@ ownership <- read_csv(here("Ownership_Europe.csv"))
 europe_rates <- merge(unemployment, ownership, by="Country")
 ```
 
+4. Initial Exploration
+
 ```{r}
-cor.test(europe_rates$Unemp_2011, europe_rates$Own_2011, method = "pearson")
+# perform a Pearson correlation test between the 2011 unemployment rate and home ownership rate
+cor.test(europe_rates$Unemp_2011,
+         europe_rates$Own_2011,
+         method = "pearson")
+
+# correlation coefficient of 0.452 with a p-value of 0.012 suggests a statistically significant, moderate positive relationsships between unemployment and home ownership rates in 2011 across European countries
+# the p-value (0.012) is statistically significant at the 5% level (p < 0.05), meaning we can reject the null hypothesis that there is no correlation
 ```
 
 ```{r}
+# ensure reproducibility by fixing the random seed. This helps geom_text_repel() place labels consistently across plots
+set.seed(42)
+
+# visualise the relationship between homeownership and unemployment rates in 2011 acros European conuntries
 ggplot(data=europe_rates, aes(Own_2011, Unemp_2011)) +
   geom_point() +
-  geom_text(aes(label=Country), angle = 30, hjust=0.5, vjust=-0.5, size = 3.5) +
   geom_smooth(method = "lm", se = TRUE, color = "red", linetype = "solid", linewidth = 0.7) +
+  geom_text_repel(aes(label=Country), size = 3.5, max.overlaps = 100) +
   labs(x = "Homeownership Rate in 2011 (%)", y = "Unemployment Rate in 2011 (%)") +
   theme_classic() +
   theme(axis.text = element_text(size = 8))
+  
+# the regression line indicates a moderate positive correlation: countries with higher homeownership rates tend to have higher unemployment rates
+# the shaded area represents the 95% confidence interval around the regression line
+# Spain, Greece, Lithuania, and Latvia show high unemployment & high homeownership
+# Switzerland, Austria, and Germany show low unemployment and low homeownership
+# Romania and Norway are outliers in that they have very high homeownerhsip but relative low unemployment
+# the plot supports the hypotheis that high homeownership may be associated with reduced labour mobility, which in turn may contribute to higher unemployment, as people are less likely to move for work
+# outliers like Norway or Romania suggest the relationship is not uniform and may be influenced by other factors
 ```
 
 ```{r}
+# transform the dataset from wide to long format
 europe_rates_long <- pivot_longer(europe_rates, cols = Unemp_2011:Own_2018, names_to = c(".value", "Year"), names_sep = "_")
 ```
 
 ```{r}
+# calculate correlations by year
+# n() returns the number of observations for each year
 group_by(europe_rates_long, Year) %>%
   summarise(cor = cor(Unemp, Own), n = n()) %>%
   print()
 ```
 
 ```{r}
+# plot unemployment vs homeownership by year
 ggplot(europe_rates_long, aes(Own, Unemp)) +
   geom_point(colour = "navy", size = 1.5) +
   geom_smooth(method = "lm", se = TRUE, color = "red", linetype = "solid", linewidth = 0.7) +
@@ -69,24 +95,35 @@ ggplot(europe_rates_long, aes(Own, Unemp)) +
   theme_classic() +
   theme(axis.text = element_text(size = 8)) +
   facet_wrap(~Year)
+
+# between 2011-2014, the relationship is clearly positive, supporting the hypothesis that high homeownership may hinder labour mobility
+# in 2015 and 2016, the positive association starts to weaken, possiby due to labour market recovery or housing reforms in some countries
+# in 2017 and 2018, the relationship becomes very weak or even flat, suggesting no clear association between homeownership and unemployment in these years
+# the positive relationship observed in early years (especially post-2008 financial crisis) dissipates over the period, possibly due to more flexible employment models, urban housing reforms, or policy interventions promoting labour mobility
 ```
 
 ```{r}
+# calculate the change in unemployment and change in homeownership between 2011 and 2018
+# the lage of 7 rows corresponds to a 7-year difference from 2011 to 2018
+# keep only the 2018, so we're left with the change from 2011 to 2018 per country
 changes <- europe_rates_long %>%
   group_by(Country) %>%
   mutate(Change_unemp = Unemp - lag(Unemp, n =7), Change_own = Own - lag(Own, n = 7)) %>% 
   filter(Year == 2018) %>% 
   select(Country, Change_unemp, Change_own)
-```
 
-```{r}
+# inspect
 changes
 ```
 
 ```{r}
+# set seed
+set.seed(42)
+
+# vissualise how change in homeownership rates relate to changes in unemployment rates across European countries from 2011 to 2018
 ggplot(data=changes, aes(Change_own, Change_unemp)) +
   geom_point() +
-  geom_text(aes(label=Country), angle = 30, hjust=0.5, vjust=-0.5, size = 3.5) +
+  geom_text_repel(aes(label=Country), size = 3.5) +
   geom_smooth(method = "lm", se = TRUE, color = "red", linetype = "solid", linewidth = 0.7) +
   labs(x = "Change in Homeownership Rate in 2011-2018", y = "Change in Unemployment Rate in 2011-2018") +
   theme_classic() +
@@ -95,72 +132,147 @@ ggplot(data=changes, aes(Change_own, Change_unemp)) +
   geom_vline(xintercept = 0, linewidth = 0.4) +
   scale_x_continuous(limits=c(-10, 5)) +
   scale_y_continuous(limits=c(-10, 5))
+
+# Changes in homeownership rates are only slightly positively correlated to changes in unemployment rates from 2011 to 2018
+# countries like Ireland, Lithuania, and Spain show falling unemployment regardless of whether homeownership increased or decreased
+# many countries have seen both falling homeownership rates and falling unemployment rates
+# Denmark had a notable drop in homeownership and only a modest fall in unemployment
+# Ireland experienced the largest drop in unemployment with almost no change in homeownership
+# Luxembourg saw a sharp rise in homeownership with little changes in unemployment
 ```
 
 ```{r}
+# fit a linear regression model to examine the relationship between changes in homeownership and changes in unemployment from 2011 to 2018
 linear_1 <- lm(Change_unemp ~ Change_own, data = changes)
+
+# display the summary of the regression model, including coefficients, R-squared value, and statistical significance
 summary(linear_1)
+
+# the summary results show that the relationship weakened consistenyl between 2011 and 2018
+# on average, countries saw a decline of 3.12 percentage points in unemployment between 2011-2018 when there wass no change in homeownerhsip
+# slope: 0.16 (not significant, p = 0.56) - the relationship between changes in homeownership and changes in unemployment is weak and not statistically significant
+# R-Squared of 0.01 shows that only 1% of the variation in unemployment change is explained by homeownership change. This is very weak explanatory power.
 ```
 
+5. Bring in External Explanatory Variables
+
 ```{r}
+# read in Age65plus_Europe.csv
 age <- read_csv(here("Age65plus_Europe.csv"))
+# read in Education_Europe.csv
 education <- read_csv(here("Education_Europe.csv"))
 ```
 
 ```{r}
+# transform the dataset from wide to long format
 age_long <- pivot_longer(age, cols = Age65plus_2011:Age65plus_2018, names_to = "Year", names_prefix = "Age65plus_", values_to = "Age65plus")
 
+# replace 'Slovak Republic' with 'Slovakia' to be consistent with other datasets
+age_long <- age_long %>% 
+  mutate(Country = ifelse(Country == "Slovak Republic", "Slovakia", Country))
+
+# inspect
+# Liechtenstein is missing from other datasets
+# Croatia is missing from education_long dataset
 age_long
 ```
 
+
 ```{r}
+# transform the dataset from wide to long format
 education_long <- pivot_longer(education, cols = Degree_2011:Degree_2018, names_to = "Year", names_prefix = "Degree_", values_to = "Degree")
 
+# inspect
 education_long
 ```
 
 ```{r}
+# quck check for mismatched or missing countries
+setdiff(age_long$Country, education_long$Country) # Liechtenstein missing from education_long
+setdiff(education_long$Country, age_long$Country) # Croatia missing from age_long
+```
+
+
+```{r}
+# merge age_long and education_long to our original europe_rates_long dataset
 europe_rates_long_merged <- europe_rates_long %>% 
   merge(., age_long, by = c("Country", "Year")) %>% 
-  merge(., education_long, by = c("Country", "Year")) %>% 
-  filter(Country != c("Croatia", "Slovakia"))
+  merge(., education_long, by = c("Country", "Year"))
 ```
 
 ```{r}
+# inspect - 232 rows remaining out of 240 (Croatia dropped. Liechtenstein was not in the original dataset)
+europe_rates_long_merged
+```
+
+
+```{r}
+# add a new column Log_unemp to noramlise exponential relationships
 europe_rates_long_merged <- mutate(europe_rates_long_merged, Log_unemp = log(Unemp))
 ```
 
 ```{r}
+# check that the Log_unemp variable has a more normal distribution than the raw Unemp rate variable
+# histogram of raw unemployment rate
+ggplot(europe_rates_long_merged, aes(Unemp)) +
+  geom_histogram(binwidth = 1, fill = "skyblue", color = "black") +
+  labs(title = "Distribution of Unemployment Rate", x = "Unemployment Rate (%)", y = "Count") +
+  theme_minimal()
+
+# histogram of log-transformed unemployment rate
+ggplot(europe_rates_long_merged, aes(Log_unemp)) +
+  geom_histogram(binwidth = 0.2, fill = "lightgreen", color = "black") +
+  labs(title = "Distribution of Log(Unemployment Rate)", x = "Log(Unemployment Rate)", y = "Count") +
+  theme_minimal()
+```
+
+```{r}
+# compute the lagged homeownership and unemployment rates for use in the model
+# These variables just measure (i) homeownership and (ii) unemployment in the country in the previous year
 europe_rates_long_merged <- europe_rates_long_merged %>%
   group_by(Country) %>%
   mutate(Lag_own = lag(Own), Lag_log_unemp = lag(Log_unemp))
 ```
 
 ```{r}
+# fit a linear model predicting log unemployment as a function just of lagged homeownership
 linear_2 <- lm(Log_unemp ~ Lag_own, data = europe_rates_long_merged)
+
+# use stargazer to present results
 stargazer(linear_2, type = "text")
+
+# for every 1 percentage point increase in lagged homeownership, the logged unemployment rate increae by 0.009 on average, holding everything else constant
+# since log-unemployment is the outcome, this effect translate to a 0.9% increase in the unemployment rate per 1% increase in lagged homeownership
+# the result is statistically significant at the 1% level
+# at the baseline (when Lag_own = 0), the model predicts a log-unemployment of 1.402. Exponentiating this gives an estimated unemployment rate of 4.06%
+# the R-Squared of 0.044 (adjusted R-Squared of 0.040) means the model explains just 4.4% of the variation in log unemployment
+# With the F-statistic of 0.334, the overall model is statistically significant
 ```
 
+6. Producing your Key Output
+
+On your own, build up your model of logged unemployment rates gradually by also including (i) age and education variables; (ii) year as either a linear term or as a factor variable (you choose!) and finally (iii) country dummy variables to act as fixed effects picking up everything else that could differ across states. We won’t include lagged unemployment in our model as O & B do because of the risk of temporally auto correlated residuals (a breach of the independence assumption). 
+
+When you’ve finished export (using stargazer) and briefly interpret your three models (i.e. the model with lagged homeowners, education and age; the model adding year and finally the model adding the country dummies). This table of model estimates plus your short interpretive text forms today’s Key Output for your technical appendix. What do the results tell us about the Oswald hypothesis? 
+
 ```{r}
+# add lagged versions of 'Age65plus' and 'Degree' to the dataset
+# the lag() function shifts each value down by one time period within each group
+# thi sis useful for time series regression where you want to predict an outcome using prior-year information
 europe_rates_long_merged <- europe_rates_long_merged %>% 
-  mutate(Lag_age65plus = lag(Age65plus), Lag_degree = lag(Degree))
+  mutate(Lag_age65plus = lag(Age65plus), # add a new column with previous year's % age 65+ for each country
+         Lag_degree = lag(Degree) # add a new column with previous year's % with tertiary education for each country
+         )
 ```
 
 ```{r}
-europe_rates_long_merged
-```
-
-```{r}
-linear_3 <- lm(Log_unemp ~ Lag_own + Age65plus + Degree + Year + Country, data = europe_rates_long_merged)
-stargazer(linear_3, type = "text")
-```
-
-```{r}
+# base model we previous
 linear_model_1 <- lm(Log_unemp ~ Lag_own, data = europe_rates_long_merged)
-stargazer(linear_model_1, type = "html")
+stargazer(linear_model_1, type = "text")
 ```
 
 ```{r}
+# 
 linear_model_2 <- lm(Log_unemp ~ Lag_own + Age65plus + Degree, data = europe_rates_long_merged)
 stargazer(linear_model_2, type = "text")
 ```
@@ -174,6 +286,14 @@ stargazer(linear_model_3, type = "latex")
 linear_model_4 <- lm(Log_unemp ~ Lag_own + Age65plus + Degree + factor(Year) + factor(Country), data = europe_rates_long_merged)
 stargazer(linear_model_4, type = "html", out = 'linear_model_4.html')
 ```
+
+7. Evidence Brief 5 for the Policy Report
+
+1. To what extent is a higher homeownership rate associated with increased youth unemployment across Europe?
+
+The data on youth unemployment rates for our study period (from Eurostat) is available in a separate .csv file called 'Youth_unemployment_Europe.csv'. You'll need to read this into R, check it over and merge the information it contains onto the datasets you already have. Pay particular attention to missing values while doing this! Once you have your data prepared you then need to pick sensible methods to address the research question. You could use descriptives, regressions or a bit of both - it's entirely up to you.
+
+Hint: youth here is defined as aged 16-24 and you don't need to look beyond the datasets I've given you for variables to answer this question. When producing your response, think about why we might expect youth unemployment to be particularly strongly or weakly affected by the homeownership rate. To do this you’ll need to consider the mechanisms Oswald argues could cause homeownership to raise unemployment  – are these likely to be particularly relevant for younger adults? Why or why not?
 
 ```{r}
 youth_unemployment <- read_csv(here("Youth_Unemployment_Europe.csv"))
