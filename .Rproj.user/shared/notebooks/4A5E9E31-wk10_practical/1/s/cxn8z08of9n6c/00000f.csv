@@ -1,0 +1,18 @@
+"0","unemployment <- read_csv(here(""Unemployment_Europe.csv""))"
+"2","[1mRows: [22m[34m30[39m [1mColumns: [22m[34m9[39m"
+"2","[36m──[39m [1mColumn specification[22m [36m──────────────────────────────────[39m
+[1mDelimiter:[22m "",""
+[31mchr[39m (1): Country
+[32mdbl[39m (8): Unemp_2011, Unemp_2012, Unemp_2013, Unemp_201..."
+"2","
+[36mℹ[39m Use `spec()` to retrieve the full column specification for this data.
+[36mℹ[39m Specify the column types or set `show_col_types = FALSE` to quiet this message."
+"0","ownership <- read_csv(here(""Ownership_Europe.csv""))"
+"2","[1mRows: [22m[34m30[39m [1mColumns: [22m[34m9[39m"
+"2","[36m──[39m [1mColumn specification[22m [36m──────────────────────────────────[39m
+[1mDelimiter:[22m "",""
+[31mchr[39m (1): Country
+[32mdbl[39m (8): Own_2011, Own_2012, Own_2013, Own_2014, Own_2..."
+"2","
+[36mℹ[39m Use `spec()` to retrieve the full column specification for this data.
+[36mℹ[39m Specify the column types or set `show_col_types = FALSE` to quiet this message."

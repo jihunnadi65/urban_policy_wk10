@@ -1,0 +1,209 @@
+GEOG0149 - Urban Policy Practical
+
+Is there a relationship between high levels of homeownership and unemployment across Europe?
+
+In recent decades, governments across the Global North have used a range of policy levers to try and increase homeownership rates. This thrust has been based on a belief that homeownership improves prosperity and wealth accumulation, fosters good citizenship, helps build more stable communities, and is simply the tenure of preference for most people.
+
+While there is much debate about the extent to which homeownership actually provides these personal and collective benefits, there has been surprisingly little consideration of the adverse impact that promoting owner-occupation could have on the labour market. This is in part because research on the economics of tenure dynamics has concentrated heavily on housing wealth and its role in welfare provision.
+
+There are good reasons to think that high rates of homeownership could adversely affect labour market performance. In a series of influential papers, Andrew Oswald showed that higher homeownership in an area or country is associated with a higher unemployment rate. He posited several mechanisms that could explain this pattern (we covered these in lecture 9 – they include the lower residential mobility of homeowners reducing job search and job matching; longer commutes by homeowners depressing productivity; reduced business formation in homeownership dominated areas etc) and provided correlational evidence for a positive association between homeownership and unemployment at the level of American states and OECD countries. Other studies have corroborated these findings, with Borg and Branden (2018) arguing that the smaller size of labour markets with high homeownership rates reduces the efficiency of job matching, raising the probability of unemployment for residents regardless of their tenure (an externality effect). Interestingly though, at the micro-level research consistently finds that homeowners are less likely to be unemployed than tenants. So what’s going on?
+
+Today you are going to take a fresh look at this puzzle using recent data on European countries. We will begin by updating Oswald’s work to see if there is still an association between higher homeownership and higher unemployment rates in the aftermath of the Global Economic Crisis. We will then examine change over time in both variables to try and get a better understanding of how and why homeownership and unemployment might be interlinked. Our overarching aim is to try and replicate Oswald and Blanchflower’s approach using fresh data.
+
+1. Load Libraries
+
+```{r}
+# load the 'here' package for file path management
+library(here)
+# load the 'tidyverse' package for data manipulation, exploration, and visualisation
+library(tidyverse)
+# load the 'stargazer' package to create well-formatted tables
+library(stargazer)
+```
+
+2. Load Datasets
+
+```{r}
+# load in Unemployment_Europe.csv
+unemployment <- read_csv(here("Unemployment_Europe.csv"))
+# load in Ownership_Europe.csv
+ownership <- read_csv(here("Ownership_Europe.csv"))
+```
+
+3. Merge Datasets
+
+```{r}
+# merge the 'unemployment' and 'ownership' dataframes by the common column "Country"
+europe_rates <- merge(unemployment, ownership, by="Country")
+```
+
+```{r}
+cor.test(europe_rates$Unemp_2011, europe_rates$Own_2011, method = "pearson")
+```
+
+```{r}
+ggplot(data=europe_rates, aes(Own_2011, Unemp_2011)) +
+  geom_point() +
+  geom_text(aes(label=Country), angle = 30, hjust=0.5, vjust=-0.5, size = 3.5) +
+  geom_smooth(method = "lm", se = TRUE, color = "red", linetype = "solid", linewidth = 0.7) +
+  labs(x = "Homeownership Rate in 2011 (%)", y = "Unemployment Rate in 2011 (%)") +
+  theme_classic() +
+  theme(axis.text = element_text(size = 8))
+```
+
+```{r}
+europe_rates_long <- pivot_longer(europe_rates, cols = Unemp_2011:Own_2018, names_to = c(".value", "Year"), names_sep = "_")
+```
+
+```{r}
+group_by(europe_rates_long, Year) %>%
+  summarise(cor = cor(Unemp, Own), n = n()) %>%
+  print()
+```
+
+```{r}
+ggplot(europe_rates_long, aes(Own, Unemp)) +
+  geom_point(colour = "navy", size = 1.5) +
+  geom_smooth(method = "lm", se = TRUE, color = "red", linetype = "solid", linewidth = 0.7) +
+  labs(x = "Homeownership Rate (%)", y = "Unemployment Rate (%)") +
+  theme_classic() +
+  theme(axis.text = element_text(size = 8)) +
+  facet_wrap(~Year)
+```
+
+```{r}
+changes <- europe_rates_long %>%
+  group_by(Country) %>%
+  mutate(Change_unemp = Unemp - lag(Unemp, n =7), Change_own = Own - lag(Own, n = 7)) %>% 
+  filter(Year == 2018) %>% 
+  select(Country, Change_unemp, Change_own)
+```
+
+```{r}
+changes
+```
+
+```{r}
+ggplot(data=changes, aes(Change_own, Change_unemp)) +
+  geom_point() +
+  geom_text(aes(label=Country), angle = 30, hjust=0.5, vjust=-0.5, size = 3.5) +
+  geom_smooth(method = "lm", se = TRUE, color = "red", linetype = "solid", linewidth = 0.7) +
+  labs(x = "Change in Homeownership Rate in 2011-2018", y = "Change in Unemployment Rate in 2011-2018") +
+  theme_classic() +
+  theme(axis.text = element_text(size = 8)) +
+  geom_hline(yintercept = 0, linewidth = 0.4) +
+  geom_vline(xintercept = 0, linewidth = 0.4) +
+  scale_x_continuous(limits=c(-10, 5)) +
+  scale_y_continuous(limits=c(-10, 5))
+```
+
+```{r}
+linear_1 <- lm(Change_unemp ~ Change_own, data = changes)
+summary(linear_1)
+```
+
+```{r}
+age <- read_csv(here("Age65plus_Europe.csv"))
+education <- read_csv(here("Education_Europe.csv"))
+```
+
+```{r}
+age_long <- pivot_longer(age, cols = Age65plus_2011:Age65plus_2018, names_to = "Year", names_prefix = "Age65plus_", values_to = "Age65plus")
+
+age_long
+```
+
+```{r}
+education_long <- pivot_longer(education, cols = Degree_2011:Degree_2018, names_to = "Year", names_prefix = "Degree_", values_to = "Degree")
+
+education_long
+```
+
+```{r}
+europe_rates_long_merged <- europe_rates_long %>% 
+  merge(., age_long, by = c("Country", "Year")) %>% 
+  merge(., education_long, by = c("Country", "Year")) %>% 
+  filter(Country != c("Croatia", "Slovakia"))
+```
+
+```{r}
+europe_rates_long_merged <- mutate(europe_rates_long_merged, Log_unemp = log(Unemp))
+```
+
+```{r}
+europe_rates_long_merged <- europe_rates_long_merged %>%
+  group_by(Country) %>%
+  mutate(Lag_own = lag(Own), Lag_log_unemp = lag(Log_unemp))
+```
+
+```{r}
+linear_2 <- lm(Log_unemp ~ Lag_own, data = europe_rates_long_merged)
+stargazer(linear_2, type = "text")
+```
+
+```{r}
+europe_rates_long_merged <- europe_rates_long_merged %>% 
+  mutate(Lag_age65plus = lag(Age65plus), Lag_degree = lag(Degree))
+```
+
+```{r}
+europe_rates_long_merged
+```
+
+```{r}
+linear_3 <- lm(Log_unemp ~ Lag_own + Age65plus + Degree + Year + Country, data = europe_rates_long_merged)
+stargazer(linear_3, type = "text")
+```
+
+```{r}
+linear_model_1 <- lm(Log_unemp ~ Lag_own, data = europe_rates_long_merged)
+stargazer(linear_model_1, type = "html")
+```
+
+```{r}
+linear_model_2 <- lm(Log_unemp ~ Lag_own + Age65plus + Degree, data = europe_rates_long_merged)
+stargazer(linear_model_2, type = "text")
+```
+
+```{r}
+linear_model_3 <- lm(Log_unemp ~ Lag_own + Age65plus + Degree + factor(Year), data = europe_rates_long_merged)
+stargazer(linear_model_3, type = "latex")
+```
+
+```{r}
+linear_model_4 <- lm(Log_unemp ~ Lag_own + Age65plus + Degree + factor(Year) + factor(Country), data = europe_rates_long_merged)
+stargazer(linear_model_4, type = "html", out = 'linear_model_4.html')
+```
+
+```{r}
+youth_unemployment <- read_csv(here("Youth_Unemployment_Europe.csv"))
+```
+
+```{r}
+youth_unemployment
+```
+
+```{r}
+youth_unemployment_long <- youth_unemployment %>% 
+  filter(Country != "United Kingdom") %>% 
+  pivot_longer(cols = Youthunemp_2011:Youthunemp_2018, names_to = "Year", names_prefix = "Youthunemp_", values_to = "Youth_unemp")
+
+youth_unemployment_long
+```
+
+```{r}
+europe_youth_unemp_rates_long <- europe_rates_long_merged %>%
+  merge(., youth_unemployment_long, by = c("Country", "Year")) %>% 
+  mutate(Youth_unemp = as.numeric(Youth_unemp)) %>% 
+  mutate(Log_youth_unemp = log(Youth_unemp)) %>% 
+  mutate(Lag_log_youth_unemp = lag(Log_youth_unemp))
+```
+
+```{r}
+europe_youth_unemp_rates_long
+```
+
+```{r}
+linear_4 <- lm(Lag_log_youth_unemp ~ Lag_own, data = europe_youth_unemp_rates_long)
+stargazer(linear_4, type = "text")
+```

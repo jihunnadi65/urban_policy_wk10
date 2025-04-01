@@ -1,0 +1,9 @@
+"0","changes <- europe_rates_long %>%
+  group_by(Country) %>%
+  mutate(Change_unemp = Unemp - lag(Unemp, n =7), Change_own = Own - lag(Own, n = 7)) %>% 
+  filter(Year == 2018) %>% 
+  seelct(Country, Change_unemp, Change_own)
+"
+"2","Error in seelct(., Country, Change_unemp, Change_own) : 
+  could not find function ""seelct""
+"

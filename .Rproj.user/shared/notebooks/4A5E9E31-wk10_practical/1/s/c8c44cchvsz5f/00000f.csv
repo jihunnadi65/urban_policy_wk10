@@ -1,0 +1,3 @@
+"0","education_long <- pivot_longer(education, cols = Degree_2011:Degree_2018, names_to = ""Year"", names_prefix = ""Degree_"", values_to = ""Degree"")"
+"0",""
+"0","education_long"

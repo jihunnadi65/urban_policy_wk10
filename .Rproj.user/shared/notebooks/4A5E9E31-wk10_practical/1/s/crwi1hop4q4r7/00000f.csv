@@ -1,0 +1,3 @@
+"0","europe_rates_long_merged <- europe_rates_long_merged %>%"
+"0","  group_by(Country) %>%"
+"0","  mutate(Lag_own = lag(Own), Lag_log_unemp = lag(Log_unemp))"

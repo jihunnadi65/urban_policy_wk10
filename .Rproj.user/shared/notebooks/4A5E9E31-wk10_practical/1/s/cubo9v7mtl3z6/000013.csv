@@ -1,0 +1,5 @@
+"0","youth_unemployment_long <- youth_unemployment %>% "
+"0","  filter(Country != ""United Kingdom"") %>% "
+"0","  pivot_longer(cols = Youthunemp_2011:Youthunemp_2018, names_to = ""Year"", names_prefix = ""Youthunemp_"", values_to = ""Youth_unemp"")"
+"0",""
+"0","youth_unemployment_long"

@@ -1,0 +1,18 @@
+"0","age <- read_csv(here(""Age65plus_Europe.csv""))"
+"2","[1mRows: [22m[34m30[39m [1mColumns: [22m[34m9[39m"
+"2","[36m──[39m [1mColumn specification[22m [36m────────────────────────────────────────────────────────────────────────────────────────────────────────────[39m
+[1mDelimiter:[22m "",""
+[31mchr[39m (1): Country
+[32mdbl[39m (8): Age65plus_2011, Age65plus_2012, Age65plus_2013, Age65plus_2014, Age65plus_2015, Age65plus_2016, Age65plus_2017, Age65pl..."
+"2","
+[36mℹ[39m Use `spec()` to retrieve the full column specification for this data.
+[36mℹ[39m Specify the column types or set `show_col_types = FALSE` to quiet this message."
+"0","education <- read_csv(here(""Education_Europe.csv""))"
+"2","[1mRows: [22m[34m30[39m [1mColumns: [22m[34m9[39m"
+"2","[36m──[39m [1mColumn specification[22m [36m────────────────────────────────────────────────────────────────────────────────────────────────────────────[39m
+[1mDelimiter:[22m "",""
+[31mchr[39m (1): Country
+[32mdbl[39m (8): Degree_2011, Degree_2012, Degree_2013, Degree_2014, Degree_2015, Degree_2016, Degree_2017, Degree_2018"
+"2","
+[36mℹ[39m Use `spec()` to retrieve the full column specification for this data.
+[36mℹ[39m Specify the column types or set `show_col_types = FALSE` to quiet this message."

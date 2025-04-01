@@ -1,0 +1,7 @@
+"0","europe_youth_unemp_rates_long <- europe_rates_long_merged %>%"
+"0","  merge(., youth_unemployment_long, by = c(""Country"", ""Year"")) %>% "
+"0","  mutate(Youth_unemp = as.numeric(Youth_unemp)) %>% "
+"0","  mutate(Log_youth_unemp = log(Youth_unemp)) %>% "
+"0","  mutate(Lag_log_youth_unemp) = lag(Log_youth_unemp)"
+"2","Error: object 'Log_youth_unemp' not found
+"
