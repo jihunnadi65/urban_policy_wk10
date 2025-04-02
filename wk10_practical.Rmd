@@ -246,7 +246,7 @@ stargazer(linear_2, type = "text")
 # the result is statistically significant at the 1% level
 # at the baseline (when Lag_own = 0), the model predicts a log-unemployment of 1.402. Exponentiating this gives an estimated unemployment rate of 4.06%
 # the R-Squared of 0.044 (adjusted R-Squared of 0.040) means the model explains just 4.4% of the variation in log unemployment
-# With the F-statistic of 0.334, the overall model is statistically significant
+# With the F-statistic of 9.334, the overall model is statistically significant
 ```
 
 6. Producing your Key Output
@@ -326,16 +326,17 @@ youth_unemployment <- read_csv(here("Youth_Unemployment_Europe.csv"))
 ```{r}
 # merge the 'unemployment' and 'ownership' dataframes by the common column "Country"
 europe_rates_youth <- merge(youth_unemployment, ownership, by="Country") %>% 
-    mutate(across(starts_with("Youthunemp_"), as.numeric))
+    mutate(across(starts_with("Youthunemp_"), as.numeric)) %>%
+    filter(Country != "United Kingdom")
 ```
 
 ```{r}
 # perform a Pearson correlation test between the 2011 youth unemployment rate and home ownership rate
-cor.test(europe_rates_youth$Youthunemp_2011,
-         europe_rates_youth$Own_2011,
+cor.test(europe_rates_youth$Youthunemp_2018,
+         europe_rates_youth$Own_2018,
          method = "pearson")
 
-# correlation coefficient of 0.57 with a p-value of 0.01228 suggests a statistically significant, moderate positive relationsship between youth unemployment and home ownership rates in 2011 across European countries
+# correlation coefficient of 0.57 with a p-value of 0.01228 suggests a statistically significant, moderate positive relationship between youth unemployment and home ownership rates in 2011 across European countries
 # the p-value (0.01228) is statistically significant at the 5% level (p < 0.05), meaning we can reject the null hypothesis that there is no correlation
 ```
 
@@ -365,16 +366,33 @@ ggplot(data=europe_rates_youth, aes(Own_2011, Youthunemp_2011)) +
 ```{r}
 # transform the dataset from wide to long format
 europe_rates_youth_long <- europe_rates_youth %>% 
-  filter(Country != "United Kingdom") %>% 
   pivot_longer(., cols = Youthunemp_2011:Own_2018, names_to = c(".value", "Year"), names_sep = "_")
 ```
 
 ```{r}
-# calculate correlations by year
-# n() returns the number of observations for each year
-group_by(europe_rates_youth_long, Year) %>%
-  summarise(cor = cor(Youthunemp, Own), n = n()) %>%
-  print()
+# calculate correlations by year and store in a data frame
+cor_summary <- europe_rates_youth_long %>%
+  group_by(Year) %>%
+  summarise(
+    cor = round(cor(Youthunemp, Own), 2),
+    n = n()
+  )
+
+ggplot(cor_summary, aes(x = Year, y = cor)) +
+  geom_line(color = "steelblue", linewidth = 1) +
+  geom_point(size = 2) +
+  geom_text(aes(label = round(cor, 2)), vjust = -1.2, size = 3) +
+  labs(
+    # title = "Youth Unemployment–Homeownership Correlation Over Time",
+    x = "Year",
+    y = "Pearson's r"
+  ) +
+  ylim(0, 0.65) +
+  theme_classic()
+
+
+# output the correlation summary as a table using stargazer
+stargazer(cor_summary, type = "text", summary = FALSE, rownames = FALSE)
 
 # in 2011, the correlation between homeownership and youth unemployment was strongest at 0.57, indicating a moderate to strong positive relationship - countries with higher homeownership tended to have higher youth unemployment
 # this correlation gradually declines over time - from 0.45 in 2012 to just 0.16 by 2018, suggesting that the association weakens as the European labour market recovers post-crisis
@@ -514,34 +532,107 @@ europe_rates_youth_long_merged <- mutate(europe_rates_youth_long_merged, Log_you
 ggplot(europe_rates_youth_long_merged, aes(Youthunemp)) +
   geom_histogram(binwidth = 1, fill = "skyblue", color = "black") +
   labs(title = "Distribution of Youth Unemployment Rate", x = "Youth Unemployment Rate (%)", y = "Count") +
-  theme_minimal()
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold")
+  )
 
 # histogram of log-transformed unemployment rate
 ggplot(europe_rates_youth_long_merged, aes(Log_youthunemp)) +
   geom_histogram(binwidth = 0.2, fill = "lightgreen", color = "black") +
-  labs(title = "Distribution of Log(Youth Unemployment Rate)", x = "Log(Youth Unemployment Rate)", y = "Count") +
-  theme_minimal()
+  labs(title = "Distribution of Log Youth Unemployment Rate", x = "Log(Youth Unemployment Rate)", y = "Count") +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold")
+  )
 ```
 
 ```{r}
 # compute the lagged homeownership and unemployment rates for use in the model
-# These variables just measure (i) homeownership and (ii) unemployment in the country in the previous year
+# these variables just measure (i) homeownership and (ii) unemployment in the country in the previous year
 europe_rates_youth_long_merged <- europe_rates_youth_long_merged %>%
   group_by(Country) %>%
-  mutate(Lag_own = lag(Own), Lag_log_youthunemp = lag(Log_youthunemp))
+  mutate(Lag_own = lag(Own, 1), Lag_log_youthunemp = lag(Log_youthunemp))
 ```
 
 ```{r}
-# fit a linear model predicting log unemployment as a function just of lagged homeownership
-linear_2 <- lm(Log_youthunemp ~ Lag_own, data = europe_rates_youth_long_merged)
+# add lagged versions of 'Age65plus' and 'Degree' to the dataset
+# the lag() function shifts each value down by one time period within each group
+# this is useful for time series regression where you want to predict an outcome using prior-year information
+europe_rates_youth_long_merged <- europe_rates_youth_long_merged %>% 
+  mutate(Lag_age65plus = lag(Age65plus), # add a new column with previous year's % age 65+ for each country
+         Lag_degree = lag(Degree) # add a new column with previous year's % with tertiary education for each country
+         )
+```
+
+```{r}
+# fit a linear model predicting log unemployment as a function just of lagged homeownership (this is our base model)
+linear_model_1 <- lm(Log_youthunemp ~ Lag_own, data = europe_rates_youth_long_merged)
 
 # use stargazer to present results
-stargazer(linear_2, type = "text")
+stargazer(linear_model_1, type = "text")
 
-# for every 1 percentage point increase in lagged homeownership, the logged unemployment rate increae by 0.009 on average, holding everything else constant
-# since log-unemployment is the outcome, this effect translate to a 0.9% increase in the unemployment rate per 1% increase in lagged homeownership
+# for every 1 percentage point increase in lagged homeownership, the logged unemployment rate increase by 0.016 on average, holding everything else constant
+# since log-unemployment is the outcome, this effect translate to a 1.6% increase in the unemployment rate per 1% increase in lagged homeownership
 # the result is statistically significant at the 1% level
-# at the baseline (when Lag_own = 0), the model predicts a log-unemployment of 1.402. Exponentiating this gives an estimated unemployment rate of 4.06%
-# the R-Squared of 0.044 (adjusted R-Squared of 0.040) means the model explains just 4.4% of the variation in log unemployment
-# With the F-statistic of 0.334, the overall model is statistically significant
+# at the baseline (when Lag_own = 0), the model predicts a log-unemployment of 1.699. Exponentiating this gives an estimated unemployment rate of 5.47%
+# the R-Squared of 0.145 (adjusted R-Squared of 0.141) means the model explains 14.5% of the variation in log unemployment
+# With the F-statistic of 33.895, the overall model is statistically significant
 ```
+
+```{r}
+# base model + Lag_age65plus + Lag_degree
+linear_model_2 <- lm(Log_youthunemp ~ Lag_own + Lag_age65plus + Lag_degree, data = europe_rates_youth_long_merged)
+stargazer(linear_model_2, type = "text")
+# neither Lag_age65plus nor Lag_degree is statistically significant
+# the addition of two variable led to an improvement in the R-Squared of only 0.008
+# the adjusted R-Squared decreased in fact, from 0.141 to 0.139
+# the lagged homeownership rate is the only significant predictor in the model
+```
+
+```{r}
+# add Year as a control to account for time-specific effects
+# using factor(Year) instead of a linear trends allows each year to have its own intercept
+linear_model_3 <- lm(Log_youthunemp ~ Lag_own + Lag_age65plus + Lag_degree + factor(Year), data = europe_rates_youth_long_merged)
+stargazer(linear_model_3, type = "text")
+# Lag_own has a statistically significant positive effect - a 1 percentage point increase in homeownership in the previous year is associated with a 1.7% increase in youth unemployment in the current year (after log transformtion)
+# Lag_age65plus shows a non-significant positive effect of 0.021 - countries with more older residents tend to have slightly higher unemployment - possibly due to lower labour market turnover or generational job competition
+# Lag_degree shows a non-significant positive effect of 0.002 on youth-unemployment
+# 2017 and 2018 show significantly negative coefficients, suggesting that unemployment rates decreased over time, independent of homeownership or demographics. This is likely due to post-crisis economic recovery across Europe
+# the R-Squared of 0.250 shows that this model explains 25% of the variation in log unemployment, which is more than that for overall unemployment
+```
+
+```{r}
+# finally, as Country as a factor variable as a dummy variable to act as fixed effects picking up everything else that could differ across states
+linear_model_4 <- lm(Log_youthunemp ~ Lag_own + Lag_age65plus + Lag_degree + factor(Year) + factor(Country), data = europe_rates_youth_long_merged)
+# inspect
+stargazer(linear_model_4, type = "text")
+# Lag_own's coefficient increased to 0.020, meaning that a 1% increase in lagged homeownership is associated with a 2% increase in the unemployment rate, holding other variables constant. This supports the Oswald hypothesis that higher homeownership may reduce labour mobility and increase unemployment
+# Lag_age65plus - countries with a higher share of older adults in the previous year now statistically significantly reduce youth unemployment (-0.219); more retirees in the population mean tighter labour supply?
+# Lag_degree coefficient is small and not significant
+# Reference year is 2012
+# Years 2013-2017 show positive coefficients, suggesting unemployment was generally higher than in 2012, even controlling for other factors
+# By 2018, the effect is close to zero, implying a return to 2012-level unemployment
+# Reference country is Austria
+# Countries like Greece (+1.651), Italy (+1.621), and Portugal (+1.039) have higher baseline unemployment than Austria, all else equal
+# In contrast, Norway (-0.948), Ireland (-0.822), and Luxembourg (-0.761) have much lower baseline unemployment
+# the model fit of 0.95 shows that thesse variable explain most of the variations in log unemployment rate
+# The F-Statistic of 84.531 shows that the model as a whole is statistically significant
+```
+
+```{r}
+# finally, as we will take out the non-significant Lag_age65plus and Lag_degree variables so we can focus on the Lag_own variable while accounting for Year and Country factors.
+linear_model_5 <- lm(Log_youthunemp ~ Lag_own + factor(Year) + factor(Country), data = europe_rates_youth_long_merged)
+# inspect
+stargazer(linear_model_5, type = "text")
+# this led to a marginal decrease in the R-Squared to 0.940 (from 0.950)
+# our Lag_own variable now is statistically significant at 99% level, with a coefficient of 0.027 - meaning for a 1% increases in the previous year's homeownership, there's a 2.7% increase in youth unemployment. This is a quite substantial effect.
+# Reference year is 2012
+# now, all the years show increasingly negative coefficients, with 2015-2018 statistically significant. This shows a consistently decreasing unemployment levels even after accounting for country-level variations
+# Reference country is Austria
+# Countries like Greece (+1.023), Italy (+0.781), and Portugal (+0.516) have higher baseline unemployment than Austria, all else equal
+# In contrast, Norway (-0.670), Malta (-0.619) and Luxembourg (-0.761) have lower baseline unemployment
+# the model fit of 0.95 shows that thesse variable explain most of the variations in log unemployment rate
+# The F-Statistic of 74.147 shows that the model as a whole is statistically significant
+```
+
