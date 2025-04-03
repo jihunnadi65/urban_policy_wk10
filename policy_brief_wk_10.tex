@@ -14,7 +14,7 @@
 
 % --- Lists and boxes ---
 \usepackage{enumitem}                       % Customise list spacing and bullets
-\usepackage[most]{tcolorbox}               % Nice boxes (e.g., for Executive Summary)
+\usepackage[most]{tcolorbox}               % Boxes for Executive Summary
 \tcbset{
 	colback=blue!5,       % Light blue background
 	colframe=black,       % Border color
@@ -46,45 +46,33 @@
 		
 		\begin{tcolorbox}
 			\begin{itemize}[left=0.3em, labelsep=0.5em, labelwidth=0.6em, itemsep=0pt, topsep=0pt]
-				\item In 2011, youth unemployment and homeownership rates showed a \textbf{moderate positive correlation} (\textit{r = 0.57}).
-				\item By 2018, this relationship had \textbf{weakened considerably} and was \textbf{no longer statistically significant} (\textit{r = 0.16}).
-				\item Panel regression models show that \textbf{lagged homeownership} has a \textbf{small but significant effect} (\textit{Coef: 0.027}) on higher youth unemployment, even after controlling for year and country factors.
-				\item \textbf{Lagged age structure} and \textbf{tertiary education} are statistically insignificant and contribute minimally to the model.
-				\item While countries like \textbf{Greece}, \textbf{Spain}, and \textbf{Italy} display both \textbf{high homeownership} and \textbf{high youth unemployment}, others like \textbf{Ireland} and \textbf{Norway} stand out as outliers, with \textbf{high ownership} and \textbf{low youth unemployment}.
+				\item In 2011, youth unemployment and homeownership showed a \textbf{moderate, statistically significant positive correlation} (\textit{r = 0.57, p < 0.01}).
+				\item By 2018, the relationship had \textbf{weakened} and was \textbf{not statistically significant} (\textit{r = 0.16, p = 0.41}), likely reflecting post-crisis labour market recovery.
+				\item Fixed-effects models show that \textbf{lagged homeownership} is linked to a \textbf{modest but significant} rise in youth unemployment (\textit{$\beta$ = 0.023}), even after controlling for year and country differences.
+				\item \textbf{Demographic controls}, including age structure and education, were excluded due to \textbf{statistical insignificance} and \textbf{minimal contribution} to model fit.
+				\item The relationship is strongest in countries with \textbf{rigid housing markets}  \textbf{(Greece, Spain, Italy)}, while \textbf{Malta, Norway} and \textbf{Slovenia} remain notable outliers.
 			\end{itemize}
 		\end{tcolorbox}
-		
-		\vspace{-1em}
-		
+
 		\section*{Background and Context}
-		\indent In recent decades, governments across the Global North have actively promoted homeownership as a route to wealth accumulation, stable communities, and civic participation. However, a growing body of research highlights potential labour market downsides of this policy emphasis. Blanchflower and Oswald (2013) argue that high ownership can increase unemployment by \textit{reducing geographic mobility}, \textit{increasing commuting distances}, and \textit{discouraging new business formation}. These mechanisms may be particularly relevant for young people (aged 16-24) who tend to face more precarious labour market conditions and rely more heavily on spatial mobility to access job opportunities.
+		In recent decades, governments across Europe have promoted homeownership as a pathway to wealth accumulation, stable communities, and civic participation. However, a growing body of research highlights potential labour market downsides to this approach. Blanchflower and Oswald (2013) argue that high ownership can increase unemployment by \textit{reducing geographic mobility}, \textit{lengthening commutes}, and \textit{discouraging new business formation}. These mechanisms may be especially relevant for young people (aged 16-24) who tend to rely more heavily on spatial mobility to access job opportunities.
 				
 		\vspace{-1em}
 		
 		\section*{Data and Methods}
-		\indent We analyse Eurostat data for 29 European countries (2011-2018), focusing on youth unemployment (aged 16-24) and homeownership rates. We explore the evolving relationship between the two over the study period using scatterplots and Pearson's correlations. To normalise skewness, we log-transform youth unemployment and use lagged homeownership as the key predictor. Fixed-effects regressions control for year and country differences, isolating the effect of homeownership. Demographic factors were tested but did not meaningfully improve model fit and were excluded from the final specification.
-		
+		This analysis uses Eurostat data for 29 European countries (2011-2018), focusing on youth unemployment and homeownership rates. We examine their evolving relationship through scatterplots and Pearson's correlations. To address skewness, youth unemployment is log-transformed. Lagged homeownership serves as the key predictor to capture delayed labour market effects. Fixed-effects regressions control for year and country differences, isolating the impact of homeownership. Demographic controls were excluded due to statistical insignificance and limited contribution to model fit.
+				
 		\vspace{-1em}
 		
 		\section*{Key Findings}
 		
 		\subsection*{Descriptive Trends}
-		\indent In 2011, countries with higher homeownership generally had higher youth unemployment. This relationship is visually evident in Figure~. Spain, Greece, and Latvia are clear drivers of the trend. However, by 2018, this relationship becomes flat, as shown in Figure
 		
 		\begin{figure}[H]
 			\centering
-			\caption{Youth Unemployment 2011}
+			\caption{Homeownership vs. Youth Unemployment Across Europe (2011)}
 			\includegraphics[width=1\linewidth]{youth_unemployment_2011.png}
 			\label{fig:youth_unemployment_2011}
-		\end{figure}
-		
-		\vspace{-1em}
-		
-		\begin{figure}[H]
-			\centering
-			\caption{Correlation Over Time (2012-2018)}
-			\includegraphics[width=1\linewidth]{cor_year.png}
-			\label{fig:cor_year}
 		\end{figure}
 		
 		\vspace{-1em}
@@ -95,20 +83,15 @@
 			\includegraphics[width=1\linewidth]{youth_unemployment_trends.png}
 			\label{fig:youth_unemployment_trends}
 		\end{figure}
-		
-		\begin{figure}[H]
-			\centering
-			\caption{Change in Homeownership}
-			\includegraphics[width=1\linewidth]{change_homeownership_7years.png}
-			\label{fig:change_homeownership_7years}
-		\end{figure}
+
 		\vspace{-1em}
 		
-		\subsection*{Regression Models}
-		\indent Table~ presents fixed-effects models predicting logged youth unemployment. Model 1 uses only lagged homeownership; Model 2 adds controls for age and education; Models 3 and 4 add year and country dummies.
+		In 2011, countries with higher homeownership rates tended to have significantly higher youth unemployment, with Spain, Greece, and Croatia driving the trend (Figure 1). The correlation was moderately positive and statistically significant (\textit{r = 0.57, p < 0.01}). However, the relationship weakened steadily over time, reaching \textit{r = 0.16} by 2018 and losing statistically significance  (\textit{p = 0.41}). As shown in the faceted plots (Figure~\ref{fig:youth_unemployment_trends}), the initially positive slope flattens over the decade, suggesting a decoupling of homeownership and youth unemployment.
 		
+		\subsection*{Regression Models}
+
 		\begin{table}[H] \centering 
-			\caption{} 
+			\caption{Base Model} 
 			\label{} 
 			\small
 			\begin{tabular}{@{\extracolsep{5pt}}lc} 
@@ -116,20 +99,16 @@
 				\hline \\[-1.8ex] 
 				& \multicolumn{1}{c}{\textit{Dependent variable:}} \\ 
 				\cline{2-2} 
-				\\[-1.8ex] & Log\_youthunemp \\ 
+				\\[-1.8ex] & Log Youth Unemployment \\ 
 				\hline \\[-1.8ex] 
-				Lag\_own & 0.016$^{***}$ \\ 
+				Lagged Ownership & 0.018$^{***}$ \\ 
 				& (0.003) \\ 
-				& \\ 
-				Constant & 1.699$^{***}$ \\ 
-				& (0.216) \\ 
-				& \\ 
+				Constant & 1.602$^{***}$ \\ 
+				& (0.212) \\ 
 				\hline \\[-1.8ex] 
-				Observations & 196 \\ 
-				R$^{2}$ & 0.145 \\ 
-				Adjusted R$^{2}$ & 0.141 \\ 
-				Residual Std. Error & 0.467 (df = 194) \\ 
-				F Statistic & 32.895$^{***}$ (df = 1; 194) \\ 
+				Observations & 203 \\ 
+				R$^{2}$ & 0.171 \\ 
+				Adjusted R$^{2}$ & 0.166 \\ 
 				\hline 
 				\hline \\[-1.8ex] 
 				\textit{Note:}  & \multicolumn{1}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
@@ -138,26 +117,55 @@
 		
 		\vspace{-1em}
 		
+		\begin{table}[H] \centering 
+			\caption{Added Controls for Year and Country} 
+			\label{} 
+			\small
+			\begin{tabular}{@{\extracolsep{5pt}}lc} 
+				\\[-1.8ex]\hline 
+				\hline \\[-1.8ex] 
+				& \multicolumn{1}{c}{\textit{Dependent variable:}} \\ 
+				\cline{2-2} 
+				\\[-1.8ex] & Log Youth Unemployment \\ 
+				\hline \\[-1.8ex] 
+				Lagged Ownership & 0.023$^{**}$ \\ 
+				& (0.010) \\ 
+				\multicolumn{2}{c}{\textellipsis\ (year and country controls omitted)} \\
+				Constant & 1.248$^{**}$ \\ 
+				& (0.548) \\ 
+				\hline \\[-1.8ex] 
+				Observations & 203 \\ 
+				R$^{2}$ & 0.942 \\ 
+				Adjusted R$^{2}$ & 0.929 \\ 
+				\hline 
+				\hline \\[-1.8ex] 
+				\textit{Note:}  & \multicolumn{1}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
+			\end{tabular} 
+		\end{table} 
+
+		\vspace{-1em}
+
+		The regression tables present two fixed-effects models predicting logged youth unemployment. Model 1, which includes only lagged homeownership, shows a significant positive association (\textit{$\beta$ = 0.018, p < 0.01}), indicating that youth unemployment rises by 1.8\% for each 1\% increase in homeownership. Lagged ownership alone explains 17.1\% of the variance (R² = 0.171). Model 2 adds year and country fixed effects, slightly strengthening the effect of lagged homeownership (\textit{$\beta$ = 0.023, p < 0.05}) after accounting for structural and temporal differences. This expanded model now explains most of the variance (R² = 0.942). Demographic controls, such as age structure and education, were tested but excluded due to statistical insignificance and limited explanatory power.
+
+		\vspace{-1em}
+
 		\section*{Policy Implications}
-		\indent Youth unemployment appears to be modestly affected by prior-year homeownership rates. Policies that encourage labour mobility (e.g. flexible housing markets, rental support, and transport subsidies) may help mitigate immobility effects. Given the decline in correlation after 2015, structural labour market recovery likely dampened the homeownership-unemployment link. However, in some Southern European countries, persistent housing tenure rigidity may still constrain young people's employment prospects.
+		The findings offer partial support for the Oswald hypothesis that high homeownership can reduce labour mobility and raise youth unemployment. While the observed effect is modest, its persistence after controlling for country and year effects suggests that rigid tenure structures can influence labour market outcomes for young people. The weakening of the relationship after 2015 reflects post-crisis economic recovery, but structural barriers remain in countries with inflexible housing systems, especially in Southern Europe. These results underscore the importance of integrating housing policy into youth employment strategies.
 		
 		\vspace{-1em}
 		
 		\section*{Recommendations}
-		\begin{itemize}[left=1em, itemsep=0pt]
-			\item \textbf{Avoid policies that over-prioritise homeownership} for youth; increase access to affordable rental housing.
-			\item \textbf{Target labour mobility} through transport infrastructure and relocation grants.
-			\item \textbf{Monitor tenure and employment jointly}, particularly in laggard regions.
-			\item \textbf{Account for local context}: in countries with weak youth employment but high ownership (e.g. Italy, Greece), housing reform could play a critical role.
-		\end{itemize}
+		European policymakers should avoid over-prioritising youth homeownership and instead strengthen access to affordable and flexible rental housing. Targeted investments in transport infrastructure and mobility support can help reduce spatial barriers to employment. Monitoring the relationship between housing tenure and youth unemployment can help identify structural barriers early and guide responsive policy. Ultimately, prioritising youth employment can boost incomes and improve young people's long-term access to housing.
 		
 		\vspace{-1em}
 		
 		\section*{Limitations}
-		\indent This brief uses national-level panel data and does not model potential spatial spillovers or family dynamics. Youth unemployment may also be driven by sectoral or educational mismatches not captured in the dataset. Finally, results are correlational; causal inference requires further study.
+		As the analysis is correlational, it cannot establish direct causality between homeownership and youth unemployment. Using one-year lagged effects may overlook longer-term housing impacts, while the lack of subnational data limits the ability to capture within-country variation. The absence of the United Kingdom slightly reduces the representativeness of the sample. The study also does not distinguish between types of homeownership or rental tenure, and the proposed mechanism of reduced mobility is inferred rather than directly tested. Finally, the relatively short timeframe (2011-2018) may not reflect longer-term structural trends or delayed policy effects.
+
+		\vspace{-1em}
 		
 		\section*{Conclusion}
-		\indent While Oswald and Blanchflower's thesis finds partial support in the youth labour market, the effect of homeownership has diminished over time. Still, policy should remain attentive to how housing systems structure opportunities for youth in the European labour market.
+		This study finds that higher ownership rates are modestly associated with increased youth unemployment in the following year. While the relationship has weakened over time, it remains relevant in countries with inflexible housing markets. As housing and labour markets continue to evolve, European policymakers should remain attentive to how tenure structures affect young people's access to employment opportunities.
 		
 	\end{multicols}
 \end{document}
